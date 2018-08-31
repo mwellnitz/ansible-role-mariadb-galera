@@ -27,14 +27,14 @@
   meta: flush_handlers
 
 - name: Install MariaDB Server (debian/ubuntu)
-  apt: name={{item}} state=installed
+  apt: name={{item}} state=present
   with_items: "{{ mariadb_apt_packages | from_yaml }}"
   when: ansible_os_family == 'Debian'
   tags:
     - apt_pkg
 
 - name: Install MariaDB Server (centos/redhat)
-  yum: name={{item}} state=installed
+  yum: name={{item}} state=present
   with_items:
     - mariadb-server
     - mariadb

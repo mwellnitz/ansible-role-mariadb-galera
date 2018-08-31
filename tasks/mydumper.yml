@@ -1,7 +1,7 @@
 ---
 
 - name: Install myloader/mydumper from package
-  package: name={{item}} state=installed
+  package: name={{item}} state=present
   with_items:
     - mydumper
   when: mariadb_install_mydumper_package|bool
