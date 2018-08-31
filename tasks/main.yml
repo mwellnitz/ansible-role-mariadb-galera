@@ -53,6 +53,7 @@
   tags:
     - galera
     - template
+  register: galera_config_changed
 
 - name: Template misc mariadb config files
   template: src="{{item.src}}" dest="{{item.dest}}" owner="{{item.owner|default('root')}}" group="{{item.group|default('root')}}" mode="{{item.mode|default('0600')}}"
@@ -61,6 +62,7 @@
     - ssl_cnf
     - mysql-tuning
     - template
+  register: misc_config_changed
 
 - name: Template mariadb nrpe config
   template: src="{{item.src}}" dest="{{item.dest}}" owner="{{item.owner|default('root')}}" group="{{item.group|default('root')}}" mode="{{item.mode|default('0600')}}"
@@ -149,3 +151,44 @@
   tags:
     - selinux
     - sepermissive
+
+- name: stop mariadb if config changed (warning! this can take from one second to several hours according to your cluster)
+  service: name=mariadb state=stopped
+  when: galera_config_changed.changed or misc_config_changed.changed
+
+- name: test if first node does normal start
+  service:  name=mariadb state=started
+  when: 
+        ((galera_current_node_name is defined and galera_current_node_name == (galera_cluster_nodes|from_yaml)[0] ) or
+        ( ansible_hostname == (galera_cluster_nodes|from_yaml)[0] )) and
+        ( galera_config_changed.changed or misc_config_changed.changed )
+  register: firstnode_start_test
+  ignore_errors: true
+
+- debug: 
+    msg: |
+         firstnode_start_test={{ firstnode_start_test }} 
+         galera_cluster_nodes[0]={{ (galera_cluster_nodes| from_yaml)[0] }}
+         galera_config_changed.changed={{ galera_config_changed.changed }}
+         misc_config_changed.changed={{ misc_config_changed.changed }}
+         galera_current_node_name={{ galera_current_node_name }}
+  when: debug is defined and (debug|bool)
+
+- name: test if first node does initial start
+  command: "/usr/bin/galera_new_cluster"
+  become: true
+  when: 
+        ((galera_current_node_name is defined and galera_current_node_name == (galera_cluster_nodes|from_yaml)[0] ) or
+        ( ansible_hostname == (galera_cluster_nodes|from_yaml)[0] )) and
+        ( galera_config_changed.changed or misc_config_changed.changed ) and
+        (firstnode_start_test.failed|bool)
+  ignore_errors: true
+  register: firstnode_initial_start_test
+
+- name: start non_initial nodes
+  service:  name=mariadb state=started
+  when:
+        ((galera_current_node_name is defined and galera_current_node_name != (galera_cluster_nodes|from_yaml)[0] ) or
+        ( ansible_hostname != (galera_cluster_nodes|from_yaml)[0] )) and
+        ( galera_config_changed.changed or misc_config_changed.changed )
+
