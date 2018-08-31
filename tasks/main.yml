@@ -28,12 +28,7 @@
 
 - name: Install MariaDB Server (debian/ubuntu)
   apt: name={{item}} state=installed
-  with_items:
-    - mariadb-server-{{mariadb_version}}
-    - mariadb-client-core-{{mariadb_version}}
-    - galera-3
-    - "{% if mariadb_install_xtrabackup|bool %} percona-xtrabackup {% endif %}" # Untested
-    - "{% if mariadb_install_backupninja|bool %} backupninja {% endif %}"
+  with_items: "{{ mariadb_apt_packages | from_yaml }}"
   when: ansible_os_family == 'Debian'
   tags:
     - apt_pkg

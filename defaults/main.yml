@@ -55,3 +55,10 @@ mariadb_backup_root:            "/var/backups"
 mariadb_backup_compress:        "yes"
 mariadb_backup_databases:       "all"
 
+mariadb_apt_packages: |
+    - mariadb-server-{{mariadb_version}}
+    - mariadb-client-core-{{mariadb_version}}
+    - galera-3
+    {% if mariadb_install_xtrabackup|bool %}- percona-xtrabackup{% endif %} 
+    {% if mariadb_install_backupninja|bool %}- backupninja {% endif %}
+
