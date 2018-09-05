@@ -152,22 +152,32 @@
     - selinux
     - sepermissive
 
+- name: get database quorum size ( (cluster number of incoming addresses / 2) +1 )
+  shell: "echo $((($(mysql <<< \"SHOW STATUS LIKE 'wsrep_incoming_addresses';\" | awk '{print $2}' | tail -n 1 | sed \"s/,/ /\"g |wc -w)/2)+1))"
+  args: 
+    executable: /bin/bash
+  register: galera_quorum_size
+
 - name: get database cluster status for this node
-  shell: "mysql <<< \"SHOW STATUS LIKE 'wsrep_cluster_status';\""
-  args: executable=/bin/bash
+  shell: "mysql <<< \"SHOW STATUS LIKE 'wsrep_cluster_status';\" | awk '{print $2}'| tail -n 1"
+  args: 
+    executable: /bin/bash
   register: galera_wsrep_cluster_status
 
 - name: get database cluster size for this node
-  shell: "mysql <<< \"SHOW STATUS LIKE 'wsrep_cluster_size';\""
-  args: executable=/bin/bash
+  shell: "mysql <<< \"SHOW STATUS LIKE 'wsrep_cluster_size';\" | awk '{print $2}'| tail -n 1"
+  args: 
+    executable: /bin/bash
   register: galera_wsrep_cluster_size
 
 - debug:
     msg: galera_wsrep_cluster_status={{ galera_wsrep_cluster_status }} galera_wsrep_cluster_size={{ galera_wsrep_cluster_size }}
+  when: debug is defined and (debug|bool)
 
 - name: stop mariadb if config changed (warning! this can take from one second to several hours according to your cluster)
   service: name=mariadb state=stopped
-  when: galera_config_changed.changed or misc_config_changed.changed
+  when: (galera_config_changed.changed or misc_config_changed.changed) and
+         galera_wsrep_cluster_status.stdout|lower == "primary" and galera_wsrep_cluster_size.stdout|int > galera_quorum_size.stdout|int
 
 - name: test if first node does normal start
   service:  name=mariadb state=started
