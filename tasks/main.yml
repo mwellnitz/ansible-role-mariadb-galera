@@ -152,6 +152,19 @@
     - selinux
     - sepermissive
 
+- name: get database cluster status for this node
+  shell: "mysql <<< \"SHOW STATUS LIKE 'wsrep_cluster_status';\""
+  args: executable=/bin/bash
+  register: galera_wsrep_cluster_status
+
+- name: get database cluster size for this node
+  shell: "mysql <<< \"SHOW STATUS LIKE 'wsrep_cluster_size';\""
+  args: executable=/bin/bash
+  register: galera_wsrep_cluster_size
+
+- debug:
+    msg: galera_wsrep_cluster_status={{ galera_wsrep_cluster_status }} galera_wsrep_cluster_size={{ galera_wsrep_cluster_size }}
+
 - name: stop mariadb if config changed (warning! this can take from one second to several hours according to your cluster)
   service: name=mariadb state=stopped
   when: galera_config_changed.changed or misc_config_changed.changed
