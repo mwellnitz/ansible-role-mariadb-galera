@@ -45,16 +45,9 @@
   tags:
     - yum_pkg
 
-- name: Template galera config file (when in a galera cluster)
-  template: src="{{item.src}}" dest="{{item.dest}}" owner="{{item.owner|default('root')}}" group="{{item.group|default('root')}}" mode="{{item.mode|default('0600')}}"
-  with_items:
-    - { src: "galera.cnf.j2", dest: "{{mariadb_conf_dir}}/galera.cnf", mode: "0644" }
-  when: galera_wsrep_cluster_name != ""
-  tags:
-    - galera
-    - template
-  register: galera_config_changed
-
+- name: Create config files
+  include: configuration.yml
+  
 - name: Template misc mariadb config files
   template: src="{{item.src}}" dest="{{item.dest}}" owner="{{item.owner|default('root')}}" group="{{item.group|default('root')}}" mode="{{item.mode|default('0600')}}"
   with_items: "{{ mariadb_misc_config_files | from_yaml }}"
@@ -63,6 +56,12 @@
     - mysql-tuning
     - template
   register: misc_config_changed
+
+- name: configuration has changed
+  register: mysql_config_changed
+  when: file_custom_vars_changed.changed or file_mysql_config_changed.changed or
+        file_mysqldump_config_changed.changed or file_mysqld_config_changed.changed or
+        file_mysqld_safe_config_changed.changed or file_galera_config_changed.changed
 
 - name: Template mariadb nrpe config
   template: src="{{item.src}}" dest="{{item.dest}}" owner="{{item.owner|default('root')}}" group="{{item.group|default('root')}}" mode="{{item.mode|default('0600')}}"
@@ -176,15 +175,15 @@
 
 - name: stop mariadb if config changed (warning! this can take from one second to several hours according to your cluster)
   service: name=mariadb state=stopped
-  when: (galera_config_changed.changed or misc_config_changed.changed) and
-         galera_wsrep_cluster_status.stdout|lower == "primary" and galera_wsrep_cluster_size.stdout|int > galera_quorum_size.stdout|int
+  when: mysql_config_changed.changed and
+        galera_wsrep_cluster_status.stdout|lower == "primary" and galera_wsrep_cluster_size.stdout|int > galera_quorum_size.stdout|int
 
 - name: test if first node does normal start
   service:  name=mariadb state=started
   when: 
         ((galera_current_node_name is defined and galera_current_node_name == (galera_cluster_nodes|from_yaml)[0] ) or
         ( ansible_hostname == (galera_cluster_nodes|from_yaml)[0] )) and
-        ( galera_config_changed.changed or misc_config_changed.changed )
+        mysql_config_changed.changed
   register: firstnode_start_test
   ignore_errors: true
 
@@ -192,8 +191,7 @@
     msg: |
          firstnode_start_test={{ firstnode_start_test }} 
          galera_cluster_nodes[0]={{ (galera_cluster_nodes| from_yaml)[0] }}
-         galera_config_changed.changed={{ galera_config_changed.changed }}
-         misc_config_changed.changed={{ misc_config_changed.changed }}
+         mysql_config_changed.changed={{ mysql_config_changed.changed }}
          galera_current_node_name={{ galera_current_node_name }}
   when: debug is defined and (debug|bool)
 
@@ -203,7 +201,7 @@
   when: 
         ((galera_current_node_name is defined and galera_current_node_name == (galera_cluster_nodes|from_yaml)[0] ) or
         ( ansible_hostname == (galera_cluster_nodes|from_yaml)[0] )) and
-        ( galera_config_changed.changed or misc_config_changed.changed ) and
+        mysql_config_changed.changed and
         (firstnode_start_test.failed|bool)
   ignore_errors: true
   register: firstnode_initial_start_test
@@ -213,5 +211,5 @@
   when:
         ((galera_current_node_name is defined and galera_current_node_name != (galera_cluster_nodes|from_yaml)[0] ) or
         ( ansible_hostname != (galera_cluster_nodes|from_yaml)[0] )) and
-        ( galera_config_changed.changed or misc_config_changed.changed )
+        mysql_config_changed.changed
 

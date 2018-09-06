@@ -63,8 +63,11 @@ mariadb_apt_packages: |
     {% if mariadb_install_backupninja|bool %}- backupninja {% endif %}
 
 mariadb_misc_config_files: |
-    - { src: "ssl.cnf.j2", dest: "{{mariadb_conf_dir}}/ssl", mode: "0644" }
-    - { src: "tuning.cnf.j2", dest: "{{mariadb_conf_dir}}/tuning.cnf", mode: "0644" }
     - { src: "mariadb@.service", dest: "/etc/systemd/system/mariadb@.service" }
     {%if mariadb_nrpe|bool %} - \{ src: "nrpe-mariadb.cfg.j2", dest: "/etc/nrpe.d/role-mariadb.cfg", owner: "nrpe", group: "nrpe", mode: "0440" \}{% endif %}
+
+mysql_collation_server: utf8_general_ci
+mysql_character_set_server: utf8
+mysql_custom_vars: []
+#    - { section: ''          ,name: ''                         ,value: ''                       ,comment: '' }
 

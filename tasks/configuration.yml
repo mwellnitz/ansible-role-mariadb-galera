@@ -1,0 +1,97 @@
+---
+- name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | client.cnf
+  ini_file:    
+    path:      "{{ mariadb_conf_dir }}/01_client.cnf"
+    section:   client
+    option:    "{{ item.name }}"
+    value:     "{{ item.value }}"
+  register: file_client_config_changed
+  loop:
+    - { name: 'port'                     ,value: '3306'                   ,comment: '' }
+    - { name: 'socket'                   ,value: '/var/run/mysqld/mysql.sock' coment: '' }
+
+- name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 02_mysql.cnf
+  ini_file:    
+    path:      "{{ mariadb_conf_dir }}/02_mysql.cnf"
+    section:   mysql
+    option:    "{{ item.name }}"
+    value:     "{{ item.value }}"
+  register: file_mysql_config_changed
+  loop:
+    - { name: 'no_auto_rehash'           ,value: ''                       ,comment: '' }
+    - { name: 'max_allowed_packet'       ,value: '16M'                    ,comment: '' }
+    - { name: 'prompt'                   ,value: '\'\u@\h [\d]> \''       ,comment: 'user@host [schema]> ' }
+    - { name: 'default_character_set'    ,value: 'utf8'                   ,comment: 'Possibly this setting is correct for most recent Linux systems' }
+
+- name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 03_mysqldump.cnf
+  ini_file:    
+    path:      "{{ mariadb_conf_dir }}/03_mysqldump.cnf"
+    section:   mysqldump
+    option:    "{{ item.name }}"
+    value:     "{{ item.value }}"
+  register: file_mysqldump_config_changed
+  loop:
+    - { name: 'max_allowed_packet'       ,value: '16M'                    ,comment: '' }
+
+- name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 04_mysqld_safe.cnf
+  ini_file:    
+    path:      "{{ mariadb_conf_dir }}/04_mysqld_safe.cnf"
+    section:   mysqld_safe
+    option:    "{{ item.name }}"
+    value:     "{{ item.value }}"
+  register: file_mysqld_safe_config_changed
+  loop:
+    - { name: 'open_files_limit'         ,value: '8192'                   ,comment: 'You possibly have to adapt your O/S settings as well' }
+    - { name: 'user'                     ,value: 'mysql'                  ,comment: '' }
+    - { name: 'log-error'                ,value: '{{ ansible_hostname }}_error.log'  ,comment: '' }
+
+- name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 05_mysqld.cnf
+  ini_file:    
+    path:      "{{ mariadb_conf_dir }}/05_mysqld.cnf"
+    section:   mysqld
+    option:    "{{ item.name }}"
+    value:     "{{ item.value }}"
+  register: file_mysqld_config_changed
+  loop:
+    - { name: 'port'                     ,value: '3306'                   ,comment: '' }
+    - { name: 'socket'                   ,value: '/var/run/mysqld/mysql.sock' ,comment: '' }
+    - { name: 'max_allowed_packet'       ,value: '16M'                    ,comment: '' }
+    - { name: 'default_storage_engine'   ,value: 'InnoDB'                 ,comment: '' }
+    - { name: 'character_set_server'     ,value: '{{ mysql_character_set_server }}'              ,comment: '' }
+    - { name: 'collation_server'         ,value: '{{ mysql_collation_server }}'                  ,comment: '' }
+    - { name: 'log-error'                ,value: '{{ ansible_hostname }}_error.log'              ,comment: '' }
+    - { name: 'max_connections'          ,value: '{{ mysql_max_connections }}'                   ,comment: 'Values < 1000 are typically good' }
+    - { name: 'max_user_connections'     ,value: '{{ mysql_max_user_connections }}'              ,comment: 'Limit one specific user/application' }
+    - { name: 'thread_cache_size'        ,value: '{{ mysql_thread_cache_size }}'                 ,comment: 'Up to max_connections makes sense' }
+    - { name: 'table_definition_cache'   ,value: '{{ mysql_table_definition_cache }}'            ,comment: 'As big as many tables you have' }
+    - { name: 'table_open_cache'         ,value: '{{ mysql_table_open_cache }}'                  ,comment: 'connections x tables/connection (~2)' }
+
+- name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | configuration of galera specific variables
+  ini_file:    
+    path:      "{{ mariadb_conf_dir }}/05_mysqld.cnf"
+    section:   mysqld
+    option:    "{{ item.name }}"
+    value:     "{{ item.value }}"
+  register: file_galera_config_changed
+  when: galera_wsrep_cluster_name != ""
+  loop:
+    - { name: 'log_slave_updates'        ,value: '1'                      ,comment: 'The variable log_slave_updates MUST to be enabled on ALL nodes, otherwise, the option wsrep_received_bytes will not be reflected on the binary logs, thus will lead to WRONG calculations!!' }
+    - { name: 'wsrep_slave_threads'      ,value: '{{ mysql_wsrep_slave_threads }}'               ,comment: '4 - 8 per core, not more than wsrep_cert_deps_distance' }
+    - { name: 'wsrep_provider_options'   ,value: 'gcache.size={{ mariadb_galera_gcache_size }}'  ,comment: 'RingBuffer file size (hdd) for temporary storage of replicated transactions. If your node comes online and cache size is big enough, galera uses IST instead of SST which is MUCH faster!' }
+    - { name: 'wsrep_sst_method'         ,value: '{{ mysql_wsrep_sst_method }}'                  ,comment: '' }
+    - { name: 'wsrep_retry_autocommit'   ,value: '5'                                             ,comment: 'Retry N times on deadlock before return and raise deadlock error. !! NOT SAFE FOR multi-statement TRANSACTIONS!!' }
+    - { name: 'wsrep_log_conflicts'      ,value: 'ON'                                            ,comment: 'each Cluster Conflict will be logged into MySQL Error Log' }
+    - { name: 'wsrep_load_data_splitting' ,value: 'OFF'                                          ,comment: 'standard:ON but LOAD DATA commands split into transactions of 10000. In case of an error data are partly committed, that`s a mess!' }
+    - { name: 'query_cache_size'         ,value: '0'                      ,comment: 'Always disable query_cache on galera nodes!' }
+    - { name: 'query_cache_type'         ,value: 'OFF'                    ,comment: 'Always disable query_cache on galera nodes!' }
+    - { name: 'have_query_cache'         ,value: 'OFF'                    ,comment: 'Always disable query_cache on galera nodes!' }
+
+- name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 06_custom_vars.cnf
+  ini_file:    
+    path:      "{{ mariadb_conf_dir }}/06_custom_vars.cnf"
+    section:   "{{ item.section }}"
+    option:    "{{ item.name }}"
+    value:     "{{ item.value }}"
+  loop:        "{{ mysql_custom_vars }}"
+  register: file_custom_vars_changed
+  when: mysql_custom_vars is defined and mysql_custom_vars != []
