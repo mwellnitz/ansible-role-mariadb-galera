@@ -165,7 +165,7 @@
     executable: /bin/bash
   register: galera_quorum_size
   changed_when: false
-  when: service_mysql_status.rc != 0
+  when: service_mysql_status.rc == 0
 
 - name: get database cluster status for this node
   shell: "mysql <<< \"SHOW STATUS LIKE 'wsrep_cluster_status';\" | awk '{print $2}'| tail -n 1"
@@ -173,7 +173,7 @@
     executable: /bin/bash
   register: galera_wsrep_cluster_status
   changed_when: false
-  when: service_mysql_status.rc != 0
+  when: service_mysql_status.rc == 0
 
 - name: get database cluster size for this node
   shell: "mysql <<< \"SHOW STATUS LIKE 'wsrep_cluster_size';\" | awk '{print $2}'| tail -n 1"
@@ -181,12 +181,12 @@
     executable: /bin/bash
   register: galera_wsrep_cluster_size
   changed_when: false
-  when: service_mysql_status.rc != 0
+  when: service_mysql_status.rc == 0
 
 - debug:
     msg: galera_wsrep_cluster_status={{ galera_wsrep_cluster_status }} galera_wsrep_cluster_size={{ galera_wsrep_cluster_size }}
   when: debug is defined and (debug|bool)
-        and service_mysql_status.rc == 0
+        and service_mysql_status.rc != 0
 
 - name: stop mariadb if config changed (warning! this can take from one second to several hours according to your cluster)
   service: name=mariadb state=stopped
