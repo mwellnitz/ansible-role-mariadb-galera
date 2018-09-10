@@ -84,7 +84,6 @@
     - { name: 'wsrep_load_data_splitting' ,value: 'OFF'                                          ,comment: 'standard:ON but LOAD DATA commands split into transactions of 10000. In case of an error data are partly committed, that`s a mess!' }
     - { name: 'query_cache_size'         ,value: '0'                      ,comment: 'Always disable query_cache on galera nodes!' }
     - { name: 'query_cache_type'         ,value: 'OFF'                    ,comment: 'Always disable query_cache on galera nodes!' }
-    - { name: 'have_query_cache'         ,value: 'OFF'                    ,comment: 'Always disable query_cache on galera nodes!' }
 
 - name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 06_custom_vars.cnf
   ini_file:    
