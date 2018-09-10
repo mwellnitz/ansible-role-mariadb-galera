@@ -8,7 +8,7 @@
   register: file_client_config_changed
   loop:
     - { name: 'port'                     ,value: '3306'                   ,comment: '' }
-    - { name: 'socket'                   ,value: '/var/run/mysqld/mysql.sock' coment: '' }
+    - { name: 'socket'                   ,value: '/var/run/mysqld/mysql.sock' ,comment: '' }
 
 - name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 02_mysql.cnf
   ini_file:    
@@ -20,7 +20,7 @@
   loop:
     - { name: 'no_auto_rehash'           ,value: ''                       ,comment: '' }
     - { name: 'max_allowed_packet'       ,value: '16M'                    ,comment: '' }
-    - { name: 'prompt'                   ,value: '\'\u@\h [\d]> \''       ,comment: 'user@host [schema]> ' }
+    - { name: 'prompt'                   ,value: '"\u@\h [\d]> "'         ,comment: 'user@host [schema]> ' }
     - { name: 'default_character_set'    ,value: 'utf8'                   ,comment: 'Possibly this setting is correct for most recent Linux systems' }
 
 - name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 03_mysqldump.cnf

@@ -66,8 +66,16 @@ mariadb_misc_config_files: |
     - { src: "mariadb@.service", dest: "/etc/systemd/system/mariadb@.service" }
     {%if mariadb_nrpe|bool %} - \{ src: "nrpe-mariadb.cfg.j2", dest: "/etc/nrpe.d/role-mariadb.cfg", owner: "nrpe", group: "nrpe", mode: "0440" \}{% endif %}
 
+mysql_max_connections: 500
+mysql_max_user_connections: 200
+mysql_thread_cache_size: 500
+mysql_table_definition_cache: 200
+mysql_table_open_cache: 400
 mysql_collation_server: utf8_general_ci
 mysql_character_set_server: utf8
+mysql_wsrep_slave_threads: 4
+mariadb_galera_gcache_size: 250M
+mysql_wsrep_sst_method: xtrabackup_v2
 mysql_custom_vars: []
 #    - { section: ''          ,name: ''                         ,value: ''                       ,comment: '' }
 
