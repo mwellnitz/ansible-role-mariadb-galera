@@ -186,7 +186,7 @@
 - debug:
     msg: galera_wsrep_cluster_status={{ galera_wsrep_cluster_status }} galera_wsrep_cluster_size={{ galera_wsrep_cluster_size }}
   when: debug is defined and (debug|bool)
-        and service_mysql_status.rc != 0
+        and service_mysql_status.rc == 0
 
 - name: stop mariadb if config changed (warning! this can take from one second to several hours according to your cluster)
   service: name=mariadb state=stopped
