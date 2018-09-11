@@ -18,7 +18,6 @@
     value:     "{{ item.value }}"
   register: file_mysql_config_changed
   loop:
-    - { name: 'no_auto_rehash'           ,value: ''                       ,comment: '' }
     - { name: 'max_allowed_packet'       ,value: '16M'                    ,comment: '' }
     - { name: 'prompt'                   ,value: '"\u@\h [\d]> "'         ,comment: 'user@host [schema]> ' }
 

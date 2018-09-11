@@ -194,9 +194,8 @@
 - name: stop mariadb if config changed (warning! this can take from one second to several hours according to your cluster)
   service: name=mariadb state=stopped
   when: mysql_config_changed.changed and
-        not galera_wsrep_cluster_status.skipped and not galera_wsrep_cluster_size.skipped and not galera_quorum_size.skipped and
+        service_mysql_status.rc == 0 and
         galera_wsrep_cluster_status.stdout|lower == "primary" and galera_wsrep_cluster_size.stdout|int > galera_quorum_size.stdout|int
-        and service_mysql_status.rc == 0
 
 - name: test if first node does normal start
   service:  name=mariadb state=started
