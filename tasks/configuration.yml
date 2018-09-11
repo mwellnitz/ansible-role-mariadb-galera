@@ -8,7 +8,7 @@
   register: file_client_config_changed
   loop:
     - { name: 'port'                     ,value: '3306'                   ,comment: '' }
-    - { name: 'socket'                   ,value: '/var/run/mysqld/mysql.sock' ,comment: '' }
+    - { name: 'socket'                   ,value: '{{ mysql_socket }}'     ,comment: '' }
 
 - name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 02_mysql.cnf
   ini_file:    
@@ -20,6 +20,7 @@
   loop:
     - { name: 'max_allowed_packet'       ,value: '16M'                    ,comment: '' }
     - { name: 'prompt'                   ,value: '"\u@\h [\d]> "'         ,comment: 'user@host [schema]> ' }
+    - { name: 'socket'                   ,value: '{{ mysql_socket }}'     ,comment: '' }
 
 - name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 03_mysqldump.cnf
   ini_file:    
@@ -52,7 +53,7 @@
   register: file_mysqld_config_changed
   loop:
     - { name: 'port'                     ,value: '3306'                   ,comment: '' }
-    - { name: 'socket'                   ,value: '/var/run/mysqld/mysql.sock' ,comment: '' }
+    - { name: 'socket'                   ,value: '{{ mysql_socket }}'     ,comment: '' }
     - { name: 'max_allowed_packet'       ,value: '16M'                    ,comment: '' }
     - { name: 'default_storage_engine'   ,value: 'InnoDB'                 ,comment: '' }
     - { name: 'character_set_server'     ,value: '{{ mysql_character_set_server }}'              ,comment: '' }
