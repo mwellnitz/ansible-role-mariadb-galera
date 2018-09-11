@@ -66,6 +66,7 @@ mariadb_misc_config_files: |
     - { src: "mariadb@.service", dest: "/etc/systemd/system/mariadb@.service" }
     {%if mariadb_nrpe|bool %} - \{ src: "nrpe-mariadb.cfg.j2", dest: "/etc/nrpe.d/role-mariadb.cfg", owner: "nrpe", group: "nrpe", mode: "0440" \}{% endif %}
 
+mysql_std_path: /var/lib/mysql
 mysql_socket: /var/run/mysqld/mysqld.sock
 mysql_max_connections: 500
 mysql_max_user_connections: 200
