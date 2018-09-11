@@ -43,6 +43,7 @@
     - { name: 'open_files_limit'         ,value: '8192'                   ,comment: 'You possibly have to adapt your O/S settings as well' }
     - { name: 'user'                     ,value: 'mysql'                  ,comment: '' }
     - { name: 'log-error'                ,value: '{{ ansible_hostname }}_error.log'  ,comment: '' }
+    - { name: 'socket'                   ,value: '{{ mysql_socket }}'     ,comment: '' }
 
 - name: roles:mariadb-galera | tasks | galera-mariadb-my-cnf | 05_mysqld.cnf
   ini_file:    
