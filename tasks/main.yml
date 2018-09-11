@@ -38,7 +38,7 @@
     src: "{{ mysql_mount }}/mysql"
     dest: "{{ mysql_std_path }}"
     state: link
-  when: mysql_std_path is defined and mysql_std_path|is_mount
+  when: mysql_std_path is defined and mysql_std_path != "" and mysql_mount|is_mount
 
 - name: Install MariaDB Server (debian/ubuntu)
   apt: name={{item}} state=present
