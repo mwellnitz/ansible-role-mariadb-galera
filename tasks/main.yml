@@ -31,13 +31,6 @@
     path: "{{ mysql_std_path }}"
     state: absent
   failed_when: False
-  when: mysql_mount is defined and mysql_mount|is_mount and not mysql_std_path|is_link
-
-- name: create symlink to mountpoint
-  file:
-    src: "{{ mysql_mount }}/mysql"
-    dest: "{{ mysql_std_path }}"
-    state: link
   when: mysql_mount is defined and mysql_mount is is_mount and not mysql_std_path is is_link
 
 - name: create symlink to mountpoint
@@ -46,6 +39,13 @@
     state: directory
   register: mysql_symlink
   when: mysql_mount is defined and mysql_mount is is_mount
+
+- name: create symlink to mountpoint
+  file:
+    src: "{{ mysql_mount }}/mysql"
+    dest: "{{ mysql_std_path }}"
+    state: link
+  when: mysql_mount is defined and mysql_mount is is_mount and not mysql_std_path is is_link
 
 - name: change permissions for newly created directory
   file:
