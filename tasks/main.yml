@@ -28,7 +28,7 @@
 
 - name: delete mysql default location if exists
   file:
-    path: {{ mysql_std_path }}
+    path: "{{ mysql_std_path }}"
     state: absent
   failed_when: False
   when: mysql_mount is defined and mysql_mount|is_mount and not mysql_std_path|is_link
