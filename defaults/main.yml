@@ -66,6 +66,10 @@ mariadb_misc_config_files: |
     - { src: "mariadb@.service", dest: "/etc/systemd/system/mariadb@.service" }
     {%if mariadb_nrpe|bool %} - \{ src: "nrpe-mariadb.cfg.j2", dest: "/etc/nrpe.d/role-mariadb.cfg", owner: "nrpe", group: "nrpe", mode: "0440" \}{% endif %}
 
+galera_wsrep_cluster_address: gcomm://192.168.1.10,192.168.1.11,192.168.1.12
+galera_wsrep_cluster_name: mariadb-galera
+galera_wsrep_node_name: "{{ ansible_hostname }}"
+galera_wsrep_node_address: 192.168.1.10
 mysql_std_path: /var/lib/mysql
 mysql_socket: /var/run/mysqld/mysqld.sock
 mysql_max_connections: 500

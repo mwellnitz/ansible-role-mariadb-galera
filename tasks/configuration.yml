@@ -57,6 +57,7 @@
     - { name: 'socket'                   ,value: '{{ mysql_socket }}'     ,comment: '' }
     - { name: 'max_allowed_packet'       ,value: '16M'                    ,comment: '' }
     - { name: 'default_storage_engine'   ,value: 'InnoDB'                 ,comment: '' }
+    - { name: 'binlog_format'            ,value: 'ROW'                    ,comment: '' }
     - { name: 'character_set_server'     ,value: '{{ mysql_character_set_server }}'              ,comment: '' }
     - { name: 'collation_server'         ,value: '{{ mysql_collation_server }}'                  ,comment: '' }
     - { name: 'log-error'                ,value: '{{ ansible_hostname }}_error.log'              ,comment: '' }
@@ -75,7 +76,13 @@
   register: file_galera_config_changed
   when: galera_wsrep_cluster_name != ""
   loop:
-    - { name: 'log_slave_updates'        ,value: '1'                      ,comment: 'The variable log_slave_updates MUST to be enabled on ALL nodes, otherwise, the option wsrep_received_bytes will not be reflected on the binary logs, thus will lead to WRONG calculations!!' }
+    - { name: 'wsrep_on'                 ,value: 'ON'                                            ,comment: '' }
+    - { name: 'wsrep_provider'           ,value: '/usr/lib/galera/libgalera_smm.so'              ,comment: '' }
+    - { name: 'wsrep_cluster_name'       ,value: '{{ galera_wsrep_cluster_name }}'               ,comment: '' }
+    - { name: 'wsrep_cluster_address'    ,value: '{{ galera_wsrep_cluster_address }}'            ,comment: '' }
+    - { name: 'wsrep_node_name'          ,value: '{{ galera_wsrep_node_name }}'                  ,comment: '' }
+    - { name: 'wsrep_node_address'       ,value: '{{ galera_wsrep_node_address }}'               ,comment: '' }
+    - { name: 'log_slave_updates'        ,value: '1'                                             ,comment: 'The variable log_slave_updates MUST to be enabled on ALL nodes, otherwise, the option wsrep_received_bytes will not be reflected on the binary logs, thus will lead to WRONG calculations!!' }
     - { name: 'wsrep_slave_threads'      ,value: '{{ mysql_wsrep_slave_threads }}'               ,comment: '4 - 8 per core, not more than wsrep_cert_deps_distance' }
     - { name: 'wsrep_provider_options'   ,value: 'gcache.size={{ mariadb_galera_gcache_size }}'  ,comment: 'RingBuffer file size (hdd) for temporary storage of replicated transactions. If your node comes online and cache size is big enough, galera uses IST instead of SST which is MUCH faster!' }
     - { name: 'wsrep_sst_method'         ,value: '{{ mysql_wsrep_sst_method }}'                  ,comment: '' }

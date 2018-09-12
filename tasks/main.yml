@@ -38,7 +38,22 @@
     src: "{{ mysql_mount }}/mysql"
     dest: "{{ mysql_std_path }}"
     state: link
-  when: mysql_std_path is defined and mysql_std_path != "" and mysql_mount|is_mount
+  when: mysql_mount is defined and mysql_mount is is_mount and not mysql_std_path is is_link
+
+- name: create symlink to mountpoint
+  file:
+    path: "{{ mysql_mount }}/mysql"
+    state: directory
+  register: mysql_symlink
+  when: mysql_mount is defined and mysql_mount is is_mount
+
+- name: change permissions for newly created directory
+  file:
+    path: "{{ mysql_mount }}/mysql"
+    state: directory
+    mode: '0777'
+  register: mysql_symlink
+  when: mysql_symlink.changed
 
 - name: Install MariaDB Server (debian/ubuntu)
   apt: name={{item}} state=present
@@ -58,6 +73,16 @@
   when: ansible_os_family == 'RedHat'
   tags:
     - yum_pkg
+
+- name: set symlink destination permissions
+  file:
+    path: "{{ mysql_mount }}/mysql"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: '0770'
+    recurse: yes
+  when: mysql_mount is defined and mysql_mount is is_mount
 
 - name: Create config files
   include: configuration.yml
