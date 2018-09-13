@@ -81,7 +81,7 @@ mysql_collation_server: utf8_general_ci
 mysql_character_set_server: utf8
 mysql_wsrep_slave_threads: 4
 mariadb_galera_gcache_size: 250M
-mysql_wsrep_sst_method: xtrabackup
+mysql_wsrep_sst_method: rsync
 mysql_custom_vars: []
 #    - { section: ''          ,name: ''                         ,value: ''                       ,comment: '' }
 
