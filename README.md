@@ -35,11 +35,18 @@ Including an example of how to use your role (for instance, with variables passe
                     - foo.domain
                     - bar.domain
                     - baz.domain
-            - galera_current_node_name: "{{ ansible_hostname }}.{{ vlan606_domain | join }}" # optional makes sense only if ansible_hostname is not in galera_cluster_nodes
-            - wsrep_node_address: "{{ node_IP }}" # optional makes sense only if it's not ansible_default_ipv4.address
+            - galera_current_node_name: "{{ ansible_hostname }}.{{ vlan_domain | join }}" # optional makes sense only if ansible_hostname is not in galera_cluster_nodes
+            - galera_wsrep_node_address: "{{ node_IP }}" # optional makes sense only if it's not ansible_default_ipv4.address
             - mariadb_install_xtrabackup: true  # optional
             - mariadb_install_backupninja: true # optional
             - ufw_enabled: false                # optional
+            - mysql_mount: "/data"              # optional , !DO IT ONLY IF /data IS A MOUNTPOINT! -- /var/lib/mysql will be deleted, /data/mysql will be created and symlink'ed to /var/lib/mysql  
+
+If you have an extra location for your data (eg. separate bcache device, NVMe, etc.) make use of parameter `mysql_mount`. The MariaDB/mysql standard location for data files will be symlinked to your extra location before MariaDB will beinstalled.
+
+You can overwrite the most important parameters and tuning options. Just have a look at the `defaults/main.yml` file. All MariaDB options are set via `tasks/configuration.yml`. If you want to overwrite options which are nonexistant in `defaults/main.yml` configure `mysql_custom_vars`. But be warned: It's not specified in which order MariaDB will read the files. Here we took the safeties way: staring with numbers ;-)
+
+The first node in `galera_cluster_nodes` is used as initial node. When starting mysql on this node fails, a second task tries to run `galera_new_cluster` to bootstrap the cluster. Therefore it's useful to run ansible on the first node first and then on the other nodes. A database shutdown will only be performed if quorum won't be affected. That's a feature, not a bug ;-) You will love it if you ever try to run the playbook on a degraded cluster. But keep in mind there is a little gap between reading the status variable and shutdown the service. If you use a tool like `multissh` or `pssh` you can crash your cluster immediately. Don't say you haven't be warned!
 
 License
 -------

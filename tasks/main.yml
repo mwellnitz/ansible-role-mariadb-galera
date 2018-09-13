@@ -26,27 +26,28 @@
 - name: Flush handlers
   meta: flush_handlers
 
-- name: delete mysql default location if exists
+- name: delete mysql default location {{ mysql_std_path }} if exists
   file:
     path: "{{ mysql_std_path }}"
     state: absent
   failed_when: False
   when: mysql_mount is defined and mysql_mount is is_mount and not mysql_std_path is is_link
 
-- name: create symlink to mountpoint
+- name: create symlink target directory at mountpoint {{ mysql_mount }}
   file:
     path: "{{ mysql_mount }}/mysql"
     state: directory
   register: mysql_symlink
   when: mysql_mount is defined and mysql_mount is is_mount
 
-- name: create symlink to mountpoint
+- name: create symlink {{ mysql_mount }}/mysql to mountpoint {{ mysql_std_path }}
   file:
     src: "{{ mysql_mount }}/mysql"
     dest: "{{ mysql_std_path }}"
     state: link
   when: mysql_mount is defined and mysql_mount is is_mount and not mysql_std_path is is_link
 
+## permission is 0660 for user mysql:mysql but user mysql only exists after packet installation. So we need a temporary permission with access for everyone as dirty hack
 - name: change permissions for newly created directory
   file:
     path: "{{ mysql_mount }}/mysql"
