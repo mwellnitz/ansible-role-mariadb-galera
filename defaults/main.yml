@@ -62,6 +62,13 @@ mariadb_apt_packages: |
     {% if mariadb_install_xtrabackup|bool %}- percona-xtrabackup{% endif %} 
     {% if mariadb_install_backupninja|bool %}- backupninja {% endif %}
 
+mariadb_yum_packages: |
+    - mariadb-server
+    - mariadb
+    - galera
+    {% if mariadb_install_xtrabackup|bool %}- percona-xtrabackup {% endif %}
+    {% if mariadb_install_backupninja|bool %}- backupninja {% endif %}
+
 mariadb_misc_config_files: |
     - { src: "mariadb@.service", dest: "/etc/systemd/system/mariadb@.service" }
     {%if mariadb_nrpe|bool %} - \{ src: "nrpe-mariadb.cfg.j2", dest: "/etc/nrpe.d/role-mariadb.cfg", owner: "nrpe", group: "nrpe", mode: "0440" \}{% endif %}

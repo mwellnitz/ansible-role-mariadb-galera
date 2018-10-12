@@ -57,20 +57,17 @@
   when: mysql_symlink.changed
 
 - name: Install MariaDB Server (debian/ubuntu)
-  apt: name={{item}} state=present
-  with_items: "{{ mariadb_apt_packages | from_yaml }}"
+  package:
+    name: "{{ mariadb_apt_packages | from_yaml }}"
+    state: present
   when: ansible_os_family == 'Debian'
   tags:
     - apt_pkg
 
 - name: Install MariaDB Server (centos/redhat)
-  yum: name={{item}} state=present
-  with_items:
-    - mariadb-server
-    - mariadb
-    - galera
-    - "{% if mariadb_install_xtrabackup|bool %} percona-xtrabackup {% endif %}"
-    - "{% if mariadb_install_backupninja|bool %} backupninja {% endif %}"
+  package:
+    name: "{{ mariadb_yum_packages | from_yaml }}"
+    state: present
   when: ansible_os_family == 'RedHat'
   tags:
     - yum_pkg
